@@ -1,0 +1,208 @@
+
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import gym
+import streamlit as st
+import plotly.express as px # interactive charts 
+import itertools
+env =gym.make('MountainCar-v0')
+env.reset()
+
+
+num_states = (env.observation_space.high - env.observation_space.low) * np.array([10, 100])
+num_states = np.round(num_states, 0).astype(int)
+
+# Q table 
+Q = np.zeros([num_states[0], num_states[1],env.action_space.n])
+
+
+#learning rate
+lr = 1
+
+discount = 1  
+
+episodes = 25000
+
+
+st.set_page_config(
+    page_title = 'Real-Time Mountain car Dashboard',
+    page_icon = '✅',
+    layout = 'wide'
+)
+
+def get_discrete_states(x):
+    s = (x - env.observation_space.low) * np.array([10, 100])
+    s = np.round(s, 0).astype(int)
+    s = tuple(s)
+    return s
+
+
+#'''加入探索部分'''
+# Exploration settings
+
+rewards = []
+rewards_dict = {'episodes' : [], 'avg': [], 'min':[], 'max':[], 'success':[]}
+
+
+
+placeholder = st.empty()
+
+env._max_episode_steps = 400
+success = 0
+
+for e in range(episodes):
+
+        
+    episode_reward = 0
+
+    done = False
+    s = env.reset()
+    state = get_discrete_states(s)    
+    
+    while not done:
+        
+        action = np.argmax(Q[state])
+            
+        ns, reward, done, _ = env.step(action)  
+        new_state = get_discrete_states(ns)
+        
+        episode_reward += reward
+        #d.append(done)
+        
+        
+        if e % 100 == 0:
+            env.render()
+        
+        
+        # Q learning 
+        if done == False:
+            nextq = np.max(Q[new_state])
+            currentq = Q[state][action]
+            
+            # temporal difference 
+            td = reward + discount*nextq - currentq
+            
+            Q[state][action] =  Q[state][action] + lr*td
+    
+    
+        # position 
+        elif ns[0] > env.goal_position:
+            Q[state][action] = 1 
+            success += 1
+            print(f'we made on episode {e}')
+            
+            
+        state = new_state
+    env.close()
+    
+    rewards.append(episode_reward)
+    average_reward = np.mean(rewards)
+    rewards_dict['episodes'].append(e)
+    rewards_dict['avg'].append(average_reward)
+    rewards_dict['max'].append(max(rewards))
+    rewards_dict['min'].append(min(rewards))
+    rewards_dict['success'].append(success)    
+
+    with placeholder.container():
+        #st.title('Simple Reinforcement learning(简单的一个强化学习演示)😛')
+        #st.markdown(<div style="text-align: center"> 'Simple Reinforcement learning(简单的一个强化学习演示)😛' </div>)
+        #st.markdown("<h1 style='text-align: center; color: black;'>Simple Reinforcement learning(简单的一个强化学习演示)😛</h1>", unsafe_allow_html=True)
+        
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            st.subheader("Live-dashboard(时时跟新小车学习状态)")
+        with c2:
+            st.subheader('Current episode(训练次数): ' +  str(e) + '👈')
+        with c3:
+            if ns[0] > env.goal_position:
+                st.subheader('Number of time success(成功次数): ' +  str(success) + '👏')
+        
+    
+        # 创建Q table 
+        #st.markdown("### Live Q table data(时时跟新小车的每一个状态)")
+        
+        t1, t2, t3, t4, t5 ,t6, t7 = st.columns(7)
+        with t1:
+            st.write('状态1')
+            st.dataframe(pd.DataFrame(Q[0].astype('int'), columns= ['Left','Stop','Right']).style.highlight_max(color = 'lightgreen', axis=1))
+        with t2:
+            st.write('状态2')
+            st.dataframe(pd.DataFrame(Q[5].astype('int'), columns= ['Left','Stop','Right']).style.highlight_max(color = 'lightgreen', axis=1))
+        with t3:
+            st.write('状态3')
+            st.dataframe(pd.DataFrame(Q[8].astype('int'), columns= ['Left','Stop','Right']).style.highlight_max(color = 'lightgreen', axis=1))
+        with t4:
+            st.write('状态4')
+            st.dataframe(pd.DataFrame(Q[10].astype('int'), columns= ['Left','Stop','Right']).style.highlight_max(color = 'lightgreen', axis=1))
+        with t5:
+            st.write('状态5')
+            st.dataframe(pd.DataFrame(Q[12].astype('int'), columns= ['Left','Stop','Right']).style.highlight_max(color = 'lightgreen', axis=1))
+        with t6:
+            st.write('状态6')
+            st.dataframe(pd.DataFrame(Q[14].astype('int'), columns= ['Left','Stop','Right']).style.highlight_max(color = 'lightgreen', axis=1))
+        with t7:
+            st.write('状态7')
+            st.dataframe(pd.DataFrame(Q[16].astype('int'), columns= ['Left','Stop','Right']).style.highlight_max(color = 'lightgreen', axis=1))
+        
+
+        f1, f2, f3 = st.columns(3)
+        with f1:
+            #st.write("Max Reward Map(最大奖励)🚀")
+            fig = px.line(x = rewards_dict['episodes'], y = rewards_dict['max'])
+            fig.update_layout(title_text="Max Reward Map(最大奖励)",title_y= 0.5,title_x=0.5, font=dict(size=20,color="black" ),xaxis_title="训练数",yaxis_title="最大奖励")
+            st.write(fig)
+            #st.write("Max Reward Map(最大奖励)🚀")
+        with f2:
+            #st.subheader("Avg Reward Map(平均奖励)🚀")
+            fig = px.line(x = rewards_dict['episodes'], y = rewards_dict['avg'])
+            fig.update_layout(title_text="Avg Reward Map(平均奖励)",title_y= 0.5,title_x=0.5, font=dict(size=20,color="black" ),xaxis_title="训练数",yaxis_title="平均奖励")
+            st.write(fig)
+        with f3:
+            #st.subheader("Total vs Scuccess(训练数vs成功数)🚀")
+            fig = px.line(x = rewards_dict['episodes'], y = rewards_dict['success'])
+            fig.update_layout(title_text="Total vs Scuccess(训练数vs成功数)🚀",title_y= 0.5,title_x=0.5, font=dict(size=20,color="black" ),xaxis_title="训练数",yaxis_title="成功数")
+            st.write(fig)
+
+
+
+
+
+fig = plt.figure(figsize=(12, 9))
+ax1 = fig.add_subplot(311)
+for x, x_vals in enumerate(Q):
+    #print(x_vals)
+    for y, y_vals in enumerate(x_vals):
+        #print(y)    
+        ax1.scatter(x, y)
+
+
+
+fig = plt.figure(figsize=(12, 9))
+plt.figure(figsize=(12, 9)).scatter(x, y)
+ 
+
+Qdf = pd.DataFrame()
+for n in range(Q.shape[0]):
+    qdf = pd.DataFrame(Q[n])
+    Qdf = pd.concat([Qdf,qdf])
+
+
+
+s1 = np.arange(-12,6)
+s2 = np.arange(-7,7,)
+
+#states list
+sl = []
+for r in itertools.product(s1, s2): 
+    sl.append((r[0], r[1]))
+    
+qdf = pd.DataFrame()
+Qdf['state1 & 2'] = sl
+
+
+
+
+
+
+

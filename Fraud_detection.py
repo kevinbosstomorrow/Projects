@@ -12,8 +12,8 @@ import pandas as pd
 import time
 import plotly.express as px 
 import seaborn as sns
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error,confusion_matrix,accuracy_score,recall_score,precision_score,classification_report,roc_auc_score
+#from sklearn.model_selection import train_test_split
+#from sklearn.metrics import mean_squared_error,confusion_matrix,accuracy_score,recall_score,precision_score,classification_report,roc_auc_score
 import shap
 import catboost
 from catboost import CatBoostClassifier

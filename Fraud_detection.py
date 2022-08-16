@@ -165,7 +165,7 @@ with placeholder3.container():
 
 
 #'''Part 2'''
-image0 = Image.open('cm.jpg')
+image0 = Image.open('cms.jpg')
 st.title('Model Overview')
 if st.button('View the Code for building catboost'):
     st.image(image0)

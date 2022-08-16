@@ -5,7 +5,7 @@ Created on Wed Aug 10 11:02:43 2022
 @author: Kevin Boss
 """
 from PIL import Image
-from streamlit_shap import st_shap
+#from streamlit_shap import st_shap
 import streamlit as st
 import numpy as np 
 import pandas as pd 
@@ -250,5 +250,8 @@ st.write(p2)
 explainer = shap.Explainer(catmodel)
 shap_values = explainer(outputdf)
 
-st_shap(shap.plots.waterfall(shap_values[0]),  height=500, width=1700)
+#st_shap(shap.plots.waterfall(shap_values[0]),  height=500, width=1700)
+st.set_option('deprecation.showPyplotGlobalUse', False)
+shap.plots.waterfall(shap_values[0])
+st.pyplot(bbox_inches='tight')
 
